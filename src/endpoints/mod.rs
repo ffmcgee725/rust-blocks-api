@@ -2,13 +2,15 @@ use actix_web::{web, HttpResponse, Responder};
 use serde::Deserialize;
 
 use crate::{
-    network::{config::NetworkConfig, ethereum_network::EthereumNetwork},
+    network::{
+        config::NetworkConfig, utils::get_network_config,
+    },
     AppState,
 };
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct GetBlockFromDateRequest {
-    network_id: Option<String>, // TODO: make required!
+    network_id: String,
     timestamp: u64,
 }
 
@@ -16,9 +18,11 @@ pub async fn get_block_from_date(
     // _app_state: web::Data<AppState>,
     params: web::Query<GetBlockFromDateRequest>,
 ) -> impl Responder {
-    // TODO: strategy pattern for network_id, for now we always fallback to EthereumNetwork
+    let network: Box<dyn NetworkConfig> = match get_network_config(&params.network_id) {
+        Ok(network) => network,
+        Err(e) => return HttpResponse::BadRequest().body(format!("{}", e)),
+    };
 
-    let network: EthereumNetwork = EthereumNetwork::new();
     let block_number: Result<u64, anyhow::Error> =
         network.get_block_from_timestamp(params.timestamp).await;
 

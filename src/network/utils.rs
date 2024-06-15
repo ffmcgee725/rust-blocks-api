@@ -1,6 +1,12 @@
+use std::error::Error;
+
 use anyhow::{anyhow, Result};
 use reqwest::Client;
 use serde::Deserialize;
+
+use super::{
+    arbitrum_network::ArbitrumNetwork, config::NetworkConfig, ethereum_network::EthereumNetwork,
+};
 
 #[derive(Deserialize)]
 struct Block {
@@ -48,4 +54,15 @@ pub async fn subgraph_query_block_from_timestamp(
         .get(0)
         .and_then(|block| block.number.parse::<u64>().ok())
         .ok_or_else(|| anyhow!("Invalid block number retrieved!"));
+}
+
+pub fn get_network_config(network_id: &str) -> Result<Box<dyn NetworkConfig>, Box<dyn Error>> {
+    match network_id {
+        "1" => Ok(Box::new(EthereumNetwork::new())),
+        "42161" => Ok(Box::new(ArbitrumNetwork::new())),
+        _ => Err(Box::new(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "Unsupported network ID",
+        ))),
+    }
 }

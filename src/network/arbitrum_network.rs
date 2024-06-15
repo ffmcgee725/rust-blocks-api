@@ -3,11 +3,11 @@ use async_trait::async_trait;
 
 use super::{config::NetworkConfig, utils::subgraph_query_block_from_timestamp};
 
-pub struct EthereumNetwork {
+pub struct ArbitrumNetwork {
     client: reqwest::Client,
 }
 
-impl EthereumNetwork {
+impl ArbitrumNetwork {
     pub fn new() -> Self {
         Self {
             client: reqwest::Client::new(),
@@ -16,7 +16,7 @@ impl EthereumNetwork {
 }
 
 #[async_trait]
-impl NetworkConfig for EthereumNetwork {
+impl NetworkConfig for ArbitrumNetwork {
     fn get_subgraph_url(&self) -> String {
         return String::from("https://api.thegraph.com/subgraphs/name/snowfork/ethereum-blocks");
     }
