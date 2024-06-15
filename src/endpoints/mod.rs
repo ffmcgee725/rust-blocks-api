@@ -32,6 +32,8 @@ pub async fn get_block_from_date(
             Err(e) => return HttpResponse::BadRequest().body(format!("{}", e)),
         };
 
+    // TODO : implement db integration, and fetch / return from db if existent [Diesel Docs](https://diesel.rs/guides/getting-started.html)
+
     let block_number: Result<u64, anyhow::Error> = match params.timestamp {
         0 => network.get_latest_block().await,
         _ => network.get_block_from_timestamp(params.timestamp).await,
@@ -55,6 +57,8 @@ pub async fn get_date_from_block(
             Ok(network) => network,
             Err(e) => return HttpResponse::BadRequest().body(format!("{}", e)),
         };
+
+    // TODO : implement db integration, and fetch / return from db if existent [Diesel Docs](https://diesel.rs/guides/getting-started.html)
 
     let timestamp: Result<u64, anyhow::Error> = match params.block {
         0 => Ok(Utc::now().timestamp() as u64),
