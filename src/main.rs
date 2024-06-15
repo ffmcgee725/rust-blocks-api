@@ -1,9 +1,13 @@
 pub mod database;
+pub mod endpoints;
+pub mod network;
+
 use actix_cors::Cors;
 use actix_web::{http::header, web, App, HttpServer};
 use database::connection::establish_connection;
 use diesel;
 use diesel::pg::PgConnection;
+use endpoints::get_block_from_date;
 use std::sync::Mutex;
 
 pub struct AppState {
@@ -30,7 +34,7 @@ async fn main() -> std::io::Result<()> {
                     .max_age(3600),
             )
             .app_data(data.clone())
-            // .route("/token", web::post().to(get_token_price))
+            .route("/block_by_date", web::get().to(get_block_from_date))
     })
     .bind("127.0.0.1:8080")?
     .run()
