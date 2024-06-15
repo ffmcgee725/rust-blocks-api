@@ -5,7 +5,6 @@ use crate::{
     network::{config::NetworkConfig, ethereum_network::EthereumNetwork},
     AppState,
 };
-use std::io::{Error, ErrorKind};
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct GetBlockFromDateRequest {
@@ -19,19 +18,15 @@ pub async fn get_block_from_date(
 ) -> impl Responder {
     // TODO: strategy pattern for network_id, for now we always fallback to EthereumNetwork
 
-    let block_number: Result<u64, Error> = EthereumNetwork::get_block_for_timestamp(params.timestamp)
-        .await
-        .map_err(|err| {
-            Error::new(
-                ErrorKind::Other,
-                format!("couldn't decode response: {}", err),
-            )
-        });
+    let network: EthereumNetwork = EthereumNetwork::new();
+    let block_number: Result<u64, anyhow::Error> =
+        network.get_block_from_timestamp(params.timestamp).await;
+
     match block_number {
         Ok(block_number) => return HttpResponse::Ok().json(block_number),
         Err(err) => {
-            println!("something went wrong: {} -> defaulting to 0", err);
-            return HttpResponse::Ok().json(0); // TODO: throw some sort of 500 error back
+            return HttpResponse::InternalServerError()
+                .body(format!("something went wrong: {}", err));
         }
     };
 }

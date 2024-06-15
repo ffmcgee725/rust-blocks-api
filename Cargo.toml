@@ -13,3 +13,4 @@ tokio = { version = "1.28.0", features = ["full"] }
 async-trait = "0.1.68"
 actix-cors = "0.6.4"
 diesel = { version = "2.0", features = ["postgres"] }
+anyhow = "1.0.86"
