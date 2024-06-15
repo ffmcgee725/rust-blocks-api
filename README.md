@@ -2,14 +2,6 @@
 
 This project provides an API for querying blockchain data by date and block number. The API supports multiple blockchain networks and allows you to fetch the block data by providing a timestamp or get the date by providing a block number.
 
-## Running the Project Locally
-
-To run the project locally, ensure you have Rust installed and use the following command:
-
-```bash
-cargo run
-```
-
 ## Environment Variables
 
 Set the following environment variable before running the project:
@@ -21,6 +13,17 @@ Edit the .env file to include your database connection string:
 
 ```makefile
 DATABASE_URL=<Connection string to a database named `rust-block-by-date`>
+```
+
+## Running the Project Locally
+
+To run the project locally, ensure you have Rust installed \
+also have diesel cli, you can check [Diesel Docs](https://diesel.rs/guides/getting-started.html) to see how to do it \
+use the following command:
+
+```bash
+diesel migration run # This will run the existing migrations onto your database
+cargo run # Runs your project in development mode
 ```
 
 ## Available Endpoints
