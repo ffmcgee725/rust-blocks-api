@@ -41,8 +41,8 @@ struct ResponseData {
 pub async fn subgraph_query_block_from_timestamp(
     client: &Client,
     url: String,
-    timestamp: u64,
-) -> Result<u64> {
+    timestamp: i64,
+) -> Result<i64> {
     let query: String = format!(
         r#"{{
           "query": "{{blocks(first: 1, orderBy: number, orderDirection: asc, where: {{ timestamp_gte: {}, timestamp_lt: {} }}) {{ number timestamp }}}}"
@@ -57,15 +57,15 @@ pub async fn subgraph_query_block_from_timestamp(
         .data
         .blocks
         .get(0)
-        .and_then(|block| block.number.parse::<u64>().ok())
+        .and_then(|block| block.number.parse::<i64>().ok())
         .ok_or_else(|| anyhow!("Invalid block number retrieved!"));
 }
 
 pub async fn subgraph_query_timestamp_from_block(
     client: &Client,
     url: String,
-    block: u64,
-) -> Result<u64> {
+    block: i64,
+) -> Result<i64> {
     let query: String = format!(
         r#"{{
           "query": "{{blocks(first: 1, orderBy: number, orderDirection: asc, where: {{ number_gte: {}, number_lt: {} }}) {{ number timestamp }}}}"
@@ -80,11 +80,11 @@ pub async fn subgraph_query_timestamp_from_block(
         .data
         .blocks
         .get(0)
-        .and_then(|block| block.timestamp.parse::<u64>().ok())
+        .and_then(|block| block.timestamp.parse::<i64>().ok())
         .ok_or_else(|| anyhow!("Invalid timestamp retrieved!"));
 }
 
-pub async fn subgraph_query_latest_block(client: &Client, url: String) -> Result<u64> {
+pub async fn subgraph_query_latest_block(client: &Client, url: String) -> Result<i64> {
     let query: String = format!(
         r#"{{
               "query": "{{blocks(first: 1, orderBy: number, orderDirection: desc) {{ number timestamp }}}}"
@@ -97,7 +97,7 @@ pub async fn subgraph_query_latest_block(client: &Client, url: String) -> Result
         .data
         .blocks
         .get(0)
-        .and_then(|block| block.number.parse::<u64>().ok())
+        .and_then(|block| block.number.parse::<i64>().ok())
         .ok_or_else(|| anyhow!("Invalid block number retrieved!"));
 }
 

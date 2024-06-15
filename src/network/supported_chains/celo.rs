@@ -27,12 +27,12 @@ impl NetworkConfig for CeloNetwork {
         return String::from("https://api.thegraph.com/subgraphs/name/ubeswap/celo-blocks");
     }
 
-    async fn get_timestamp_from_block(&self, block: u64) -> Result<u64> {
+    async fn get_timestamp_from_block(&self, block: i64) -> Result<i64> {
         return subgraph_query_timestamp_from_block(&self.client, self.get_subgraph_url(), block)
             .await;
     }
 
-    async fn get_block_from_timestamp(&self, timestamp: u64) -> Result<u64> {
+    async fn get_block_from_timestamp(&self, timestamp: i64) -> Result<i64> {
         return subgraph_query_block_from_timestamp(
             &self.client,
             self.get_subgraph_url(),
@@ -41,7 +41,7 @@ impl NetworkConfig for CeloNetwork {
         .await;
     }
 
-    async fn get_latest_block(&self) -> Result<u64> {
+    async fn get_latest_block(&self) -> Result<i64> {
         return subgraph_query_latest_block(&self.client, self.get_subgraph_url()).await;
     }
 }
