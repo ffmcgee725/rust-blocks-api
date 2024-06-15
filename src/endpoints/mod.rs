@@ -56,7 +56,7 @@ pub async fn get_date_from_block(
             Err(e) => return HttpResponse::BadRequest().body(format!("{}", e)),
         };
 
-    let timestamp = match params.block {
+    let timestamp: Result<u64, anyhow::Error> = match params.block {
         0 => Ok(Utc::now().timestamp() as u64),
         _ => network.get_timestamp_from_block(params.block).await,
     };
