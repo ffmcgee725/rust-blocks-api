@@ -1,11 +1,15 @@
 use actix_web::{web, HttpResponse, Responder};
 use chrono::Utc;
+use diesel::PgConnection;
 use serde::Deserialize;
 
 use crate::{
     network::{
         config::{NetworkConfig, NetworkId},
-        utils::get_network_config,
+        utils::{
+            get_block_info_from_height, get_block_info_from_timestamp, get_network_config,
+            maybe_insert_block_to_db,
+        },
     },
     AppState,
 };
@@ -23,7 +27,7 @@ pub struct GetDateFromBlockRequest {
 }
 
 pub async fn get_block_from_date(
-    // _app_state: web::Data<AppState>,
+    app_state: web::Data<AppState>,
     params: web::Query<GetBlockFromDateRequest>,
 ) -> impl Responder {
     let network: Box<dyn NetworkConfig> =
@@ -32,7 +36,17 @@ pub async fn get_block_from_date(
             Err(e) => return HttpResponse::BadRequest().body(format!("{}", e)),
         };
 
-    // TODO : implement db integration, and fetch / return from db if existent [Diesel Docs](https://diesel.rs/guides/getting-started.html)
+    if &params.timestamp > &0 {
+        let mut conn: std::sync::MutexGuard<PgConnection> = app_state.db.lock().unwrap();
+        match get_block_info_from_timestamp(
+            &mut conn,
+            &params.network_id,
+            &params.timestamp.try_into().unwrap(), // TODO: better solution to unwrap() here; (look into just retrieving info from subgraph as i64)
+        ) {
+            Some(block) => return HttpResponse::Ok().json(block.block_number),
+            None => {}
+        }
+    }
 
     let block_number: Result<u64, anyhow::Error> = match params.timestamp {
         0 => network.get_latest_block().await,
@@ -40,7 +54,16 @@ pub async fn get_block_from_date(
     };
 
     match block_number {
-        Ok(block_number) => return HttpResponse::Ok().json(block_number),
+        Ok(block_number) => {
+            let mut conn: std::sync::MutexGuard<PgConnection> = app_state.db.lock().unwrap();
+            maybe_insert_block_to_db(
+                &mut conn,
+                &params.network_id,
+                block_number.try_into().unwrap(),
+                params.timestamp.try_into().unwrap(), // TODO: better solution to unwrap() here; (look into just retrieving info from subgraph as i64)
+            );
+            return HttpResponse::Ok().json(block_number);
+        }
         Err(err) => {
             return HttpResponse::InternalServerError()
                 .body(format!("something went wrong: {}", err));
@@ -49,7 +72,7 @@ pub async fn get_block_from_date(
 }
 
 pub async fn get_date_from_block(
-    // _app_state: web::Data<AppState>,
+    app_state: web::Data<AppState>,
     params: web::Query<GetDateFromBlockRequest>,
 ) -> impl Responder {
     let network: Box<dyn NetworkConfig> =
@@ -58,15 +81,33 @@ pub async fn get_date_from_block(
             Err(e) => return HttpResponse::BadRequest().body(format!("{}", e)),
         };
 
-    // TODO : implement db integration, and fetch / return from db if existent [Diesel Docs](https://diesel.rs/guides/getting-started.html)
-
+    if &params.block > &0 {
+        let mut conn: std::sync::MutexGuard<PgConnection> = app_state.db.lock().unwrap();
+        match get_block_info_from_height(
+            &mut conn,
+            &params.network_id,
+            &params.block.try_into().unwrap(), // TODO: better solution to unwrap() here; (look into just retrieving info from subgraph as i64)
+        ) {
+            Some(block) => return HttpResponse::Ok().json(block.timestamp),
+            None => {}
+        }
+    }
     let timestamp: Result<u64, anyhow::Error> = match params.block {
         0 => Ok(Utc::now().timestamp() as u64),
         _ => network.get_timestamp_from_block(params.block).await,
     };
 
     match timestamp {
-        Ok(block_number) => return HttpResponse::Ok().json(block_number),
+        Ok(timestamp) => {
+            let mut conn: std::sync::MutexGuard<PgConnection> = app_state.db.lock().unwrap();
+            maybe_insert_block_to_db(
+                &mut conn,
+                &params.network_id,
+                params.block.try_into().unwrap(), // TODO: better solution to unwrap() here;
+                timestamp.try_into().unwrap(),
+            );
+            return HttpResponse::Ok().json(timestamp);
+        }
         Err(err) => {
             return HttpResponse::InternalServerError()
                 .body(format!("something went wrong: {}", err));

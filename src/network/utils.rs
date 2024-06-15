@@ -1,9 +1,16 @@
 use std::error::Error;
 
 use anyhow::{anyhow, Result};
+use diesel::{
+    query_dsl::methods::FilterDsl, ExpressionMethods, PgConnection, RunQueryDsl, SelectableHelper,
+};
 use reqwest::header::CONTENT_TYPE;
 use reqwest::Client;
 
+use crate::database::models::{BlockInsertModel, BlockQueryModel};
+use diesel::query_dsl::methods::LimitDsl;
+use diesel::query_dsl::methods::SelectDsl;
+use diesel::OptionalExtension;
 use serde::Deserialize;
 
 use super::{
@@ -113,6 +120,73 @@ async fn subgraph_parse_response_data(
         .map_err(|err| anyhow!("couldn't decode response: {}", err))?;
 
     return Ok(parsed_data);
+}
+
+pub fn get_block_info_from_timestamp(
+    conn: &mut PgConnection,
+    network: &str,
+    lookup_timestamp: &i64,
+) -> Option<BlockQueryModel> {
+    use crate::schema::blocks::dsl::*;
+
+    let result = blocks
+        .filter(network_id.eq(network))
+        .filter(timestamp.eq(lookup_timestamp))
+        .limit(1)
+        .select(BlockQueryModel::as_select())
+        .first(conn)
+        .optional();
+
+    return match result {
+        Ok(Some(block)) => Some(block),
+        _ => None,
+    };
+}
+
+pub fn get_block_info_from_height(
+    conn: &mut PgConnection,
+    network: &str,
+    lookup_height: &i64,
+) -> Option<BlockQueryModel> {
+    use crate::schema::blocks::dsl::*;
+
+    let result = blocks
+        .filter(network_id.eq(network))
+        .filter(block_number.eq(lookup_height))
+        .limit(1)
+        .select(BlockQueryModel::as_select())
+        .first(conn)
+        .optional();
+
+    return match result {
+        Ok(Some(block)) => Some(block),
+        _ => None,
+    };
+}
+
+pub fn maybe_insert_block_to_db(
+    conn: &mut PgConnection,
+    network_id: &str,
+    block_number: i64,
+    timestamp: i64,
+) {
+    if block_number == 0 || timestamp == 0 {
+        return;
+    }
+
+    use crate::schema::blocks;
+
+    let block: BlockInsertModel = BlockInsertModel {
+        network_id,
+        block_number,
+        timestamp,
+    };
+
+    diesel::insert_into(blocks::table)
+        .values(&block)
+        .returning(BlockQueryModel::as_returning())
+        .get_results(conn)
+        .expect("Error saving new block"); // TODO better info message with block info
 }
 
 pub fn get_network_config(

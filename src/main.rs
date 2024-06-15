@@ -1,6 +1,7 @@
 pub mod database;
 pub mod endpoints;
 pub mod network;
+pub mod schema;
 
 use actix_cors::Cors;
 use actix_web::{http::header, web, App, HttpServer};
