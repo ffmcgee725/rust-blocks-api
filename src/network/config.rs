@@ -11,18 +11,34 @@ pub trait NetworkConfig {
 
 #[derive(Deserialize, Debug, Clone)]
 pub enum NetworkId {
-    ETHEREUM,
     ARBITRUM,
+    AVALANCHE,
+    AURORA,
+    BASE,
+    CELO,
+    ETHEREUM,
+    FANTOM,
     POLYGON,
+    OPTIMISM,
+    RONIN,
+    XDAI,
     UNSUPPORTED_ID,
 }
 
 impl NetworkId {
     pub fn from(id: &str) -> NetworkId {
         match id {
-            "1" => NetworkId::ETHEREUM,
             "42161" => NetworkId::ARBITRUM,
+            "43114" => NetworkId::AVALANCHE,
+            "1313161554" => NetworkId::AURORA,
+            "8453" => NetworkId::BASE,
+            "42220" => NetworkId::CELO,
+            "1" => NetworkId::ETHEREUM,
+            "250" => NetworkId::FANTOM,
             "127" => NetworkId::POLYGON,
+            "10" => NetworkId::OPTIMISM,
+            "2020" => NetworkId::RONIN,
+            "100" => NetworkId::XDAI,
             _ => NetworkId::UNSUPPORTED_ID,
         }
     }

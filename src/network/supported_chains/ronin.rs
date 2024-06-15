@@ -1,13 +1,13 @@
 use anyhow::Result;
 use async_trait::async_trait;
 
-use super::{config::NetworkConfig, utils::subgraph_query_block_from_timestamp};
+use crate::network::{config::NetworkConfig, utils::subgraph_query_block_from_timestamp};
 
-pub struct ArbitrumNetwork {
+pub struct RoninNetwork {
     client: reqwest::Client,
 }
 
-impl ArbitrumNetwork {
+impl RoninNetwork {
     pub fn new() -> Self {
         Self {
             client: reqwest::Client::new(),
@@ -16,10 +16,10 @@ impl ArbitrumNetwork {
 }
 
 #[async_trait]
-impl NetworkConfig for ArbitrumNetwork {
+impl NetworkConfig for RoninNetwork {
     fn get_subgraph_url(&self) -> String {
         return String::from(
-            "https://api.thegraph.com/subgraphs/name/ianlapham/arbitrum-one-blocks",
+            "https://thegraph-v2.roninchain.com/subgraphs/name/axieinfinity/ronin-blocks",
         );
     }
 

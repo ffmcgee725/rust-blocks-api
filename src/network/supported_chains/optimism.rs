@@ -1,13 +1,13 @@
 use anyhow::Result;
 use async_trait::async_trait;
 
-use super::{config::NetworkConfig, utils::subgraph_query_block_from_timestamp};
+use crate::network::{config::NetworkConfig, utils::subgraph_query_block_from_timestamp};
 
-pub struct PolygonNetwork {
+pub struct OptimismNetwork {
     client: reqwest::Client,
 }
 
-impl PolygonNetwork {
+impl OptimismNetwork {
     pub fn new() -> Self {
         Self {
             client: reqwest::Client::new(),
@@ -16,10 +16,10 @@ impl PolygonNetwork {
 }
 
 #[async_trait]
-impl NetworkConfig for PolygonNetwork {
+impl NetworkConfig for OptimismNetwork {
     fn get_subgraph_url(&self) -> String {
         return String::from(
-            "https://api.thegraph.com/subgraphs/name/ord786/matic-blocks",
+            "https://api.thegraph.com/subgraphs/name/beethovenxfi/optimism-blocks",
         );
     }
 

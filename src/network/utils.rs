@@ -1,14 +1,18 @@
 use std::error::Error;
 
 use anyhow::{anyhow, Result};
+use reqwest::header::CONTENT_TYPE;
 use reqwest::Client;
+
 use serde::Deserialize;
 
 use super::{
-    arbitrum_network::ArbitrumNetwork,
     config::{NetworkConfig, NetworkId},
-    ethereum_network::EthereumNetwork,
-    polygon_network::PolygonNetwork,
+    supported_chains::{
+        arbitrum::ArbitrumNetwork, aurora::AuroraNetwork, avalanche::AvalancheNetwork,
+        base::BaseNetwork, celo::CeloNetwork, ethereum::EthereumNetwork, fantom::FantomNetwork,
+        optimism::OptimismNetwork, polygon::PolygonNetwork, ronin::RoninNetwork, xdai::XDaiNetwork,
+    },
 };
 
 #[derive(Deserialize)]
@@ -41,6 +45,7 @@ pub async fn subgraph_query_block_from_timestamp(
 
     let response: reqwest::Response = client
         .post(url)
+        .header(CONTENT_TYPE, "application/json")
         .body(query)
         .send()
         .await
@@ -63,9 +68,17 @@ pub fn get_network_config(
     network_id: &NetworkId,
 ) -> Result<Box<dyn NetworkConfig>, Box<dyn Error>> {
     match network_id {
-        NetworkId::ETHEREUM => Ok(Box::new(EthereumNetwork::new())),
         NetworkId::ARBITRUM => Ok(Box::new(ArbitrumNetwork::new())),
+        NetworkId::AVALANCHE => Ok(Box::new(AvalancheNetwork::new())),
+        NetworkId::AURORA => Ok(Box::new(AuroraNetwork::new())),
+        NetworkId::BASE => Ok(Box::new(BaseNetwork::new())),
+        NetworkId::CELO => Ok(Box::new(CeloNetwork::new())),
+        NetworkId::ETHEREUM => Ok(Box::new(EthereumNetwork::new())),
+        NetworkId::FANTOM => Ok(Box::new(FantomNetwork::new())),
         NetworkId::POLYGON => Ok(Box::new(PolygonNetwork::new())),
+        NetworkId::OPTIMISM => Ok(Box::new(OptimismNetwork::new())),
+        NetworkId::RONIN => Ok(Box::new(RoninNetwork::new())),
+        NetworkId::XDAI => Ok(Box::new(XDaiNetwork::new())),
         NetworkId::UNSUPPORTED_ID => Err(Box::new(std::io::Error::new(
             std::io::ErrorKind::InvalidInput,
             "Unsupported network ID",
