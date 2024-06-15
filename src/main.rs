@@ -1,6 +1,6 @@
 pub mod database;
-pub mod endpoints;
 pub mod network;
+pub mod routes;
 pub mod schema;
 
 use actix_cors::Cors;
@@ -8,7 +8,7 @@ use actix_web::{http::header, web, App, HttpServer};
 use database::connection::establish_connection;
 use diesel;
 use diesel::pg::PgConnection;
-use endpoints::{get_block_from_date, get_date_from_block};
+use routes::endpoints::{get_block_from_date, get_date_from_block};
 use std::sync::Mutex;
 
 pub struct AppState {
