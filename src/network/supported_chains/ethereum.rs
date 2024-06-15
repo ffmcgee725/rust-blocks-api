@@ -1,7 +1,13 @@
 use anyhow::Result;
 use async_trait::async_trait;
 
-use crate::network::{config::NetworkConfig, utils::subgraph_query_block_from_timestamp};
+use crate::network::{
+    config::NetworkConfig,
+    utils::{
+        subgraph_query_block_from_timestamp, subgraph_query_latest_block,
+        subgraph_query_timestamp_from_block,
+    },
+};
 
 pub struct EthereumNetwork {
     client: reqwest::Client,
@@ -21,6 +27,11 @@ impl NetworkConfig for EthereumNetwork {
         return String::from("https://api.thegraph.com/subgraphs/name/snowfork/ethereum-blocks");
     }
 
+    async fn get_timestamp_from_block(&self, block: u64) -> Result<u64> {
+        return subgraph_query_timestamp_from_block(&self.client, self.get_subgraph_url(), block)
+            .await;
+    }
+
     async fn get_block_from_timestamp(&self, timestamp: u64) -> Result<u64> {
         return subgraph_query_block_from_timestamp(
             &self.client,
@@ -30,7 +41,7 @@ impl NetworkConfig for EthereumNetwork {
         .await;
     }
 
-    fn get_latest_block(&self) {
-        todo!()
+    async fn get_latest_block(&self) -> Result<u64> {
+        return subgraph_query_latest_block(&self.client, self.get_subgraph_url()).await;
     }
 }

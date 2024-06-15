@@ -17,6 +17,7 @@ use super::{
 
 #[derive(Deserialize)]
 struct Block {
+    timestamp: String,
     number: String,
 }
 
@@ -37,12 +38,67 @@ pub async fn subgraph_query_block_from_timestamp(
 ) -> Result<u64> {
     let query: String = format!(
         r#"{{
-          "query": "{{blocks(first: 1, orderBy: number, orderDirection: asc, where: {{ timestamp_gte: {}, timestamp_lt: {} }}) {{ id number timestamp }}}}"
+          "query": "{{blocks(first: 1, orderBy: number, orderDirection: asc, where: {{ timestamp_gte: {}, timestamp_lt: {} }}) {{ number timestamp }}}}"
       }}"#,
         timestamp,
         timestamp + 60
     );
 
+    let parsed_data: ResponseData = subgraph_parse_response_data(client, url, query).await?;
+
+    return parsed_data
+        .data
+        .blocks
+        .get(0)
+        .and_then(|block| block.number.parse::<u64>().ok())
+        .ok_or_else(|| anyhow!("Invalid block number retrieved!"));
+}
+
+pub async fn subgraph_query_timestamp_from_block(
+    client: &Client,
+    url: String,
+    block: u64,
+) -> Result<u64> {
+    let query: String = format!(
+        r#"{{
+          "query": "{{blocks(first: 1, orderBy: number, orderDirection: asc, where: {{ number_gte: {}, number_lt: {} }}) {{ number timestamp }}}}"
+      }}"#,
+        block,
+        block + 5
+    );
+
+    let parsed_data: ResponseData = subgraph_parse_response_data(client, url, query).await?;
+
+    return parsed_data
+        .data
+        .blocks
+        .get(0)
+        .and_then(|block| block.timestamp.parse::<u64>().ok())
+        .ok_or_else(|| anyhow!("Invalid timestamp retrieved!"));
+}
+
+pub async fn subgraph_query_latest_block(client: &Client, url: String) -> Result<u64> {
+    let query: String = format!(
+        r#"{{
+              "query": "{{blocks(first: 1, orderBy: number, orderDirection: desc) {{ number timestamp }}}}"
+          }}"#
+    );
+
+    let parsed_data: ResponseData = subgraph_parse_response_data(client, url, query).await?;
+
+    return parsed_data
+        .data
+        .blocks
+        .get(0)
+        .and_then(|block| block.number.parse::<u64>().ok())
+        .ok_or_else(|| anyhow!("Invalid block number retrieved!"));
+}
+
+async fn subgraph_parse_response_data(
+    client: &Client,
+    url: String,
+    query: String,
+) -> Result<ResponseData> {
     let response: reqwest::Response = client
         .post(url)
         .header(CONTENT_TYPE, "application/json")
@@ -56,12 +112,7 @@ pub async fn subgraph_query_block_from_timestamp(
         .await
         .map_err(|err| anyhow!("couldn't decode response: {}", err))?;
 
-    return parsed_data
-        .data
-        .blocks
-        .get(0)
-        .and_then(|block| block.number.parse::<u64>().ok())
-        .ok_or_else(|| anyhow!("Invalid block number retrieved!"));
+    return Ok(parsed_data);
 }
 
 pub fn get_network_config(

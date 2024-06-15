@@ -5,8 +5,9 @@ use serde::Deserialize;
 #[async_trait]
 pub trait NetworkConfig {
     fn get_subgraph_url(&self) -> String;
+    async fn get_timestamp_from_block(&self, block: u64) -> Result<u64>;
     async fn get_block_from_timestamp(&self, timestamp: u64) -> Result<u64>;
-    fn get_latest_block(&self);
+    async fn get_latest_block(&self) -> Result<u64>;
 }
 
 #[derive(Deserialize, Debug, Clone)]

@@ -7,7 +7,7 @@ use actix_web::{http::header, web, App, HttpServer};
 use database::connection::establish_connection;
 use diesel;
 use diesel::pg::PgConnection;
-use endpoints::get_block_from_date;
+use endpoints::{get_block_from_date, get_date_from_block};
 use std::sync::Mutex;
 
 pub struct AppState {
@@ -35,6 +35,7 @@ async fn main() -> std::io::Result<()> {
             )
             .app_data(data.clone())
             .route("/block_by_date", web::get().to(get_block_from_date))
+            .route("/date_by_block", web::get().to(get_date_from_block))
     })
     .bind("127.0.0.1:8080")?
     .run()
