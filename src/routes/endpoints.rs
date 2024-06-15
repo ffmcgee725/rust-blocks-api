@@ -84,8 +84,9 @@ pub async fn get_date_from_block(
             None => {}
         }
     }
+
     let timestamp: Result<i64, anyhow::Error> = match params.block {
-        0 => Ok(Utc::now().timestamp() as i64),
+        0 => Ok(Utc::now().timestamp()),
         _ => network.get_timestamp_from_block(params.block).await,
     };
 
